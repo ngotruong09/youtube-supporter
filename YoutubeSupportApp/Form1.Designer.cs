@@ -32,6 +32,7 @@
             btnShowVideo = new Button();
             txtChannelID = new TextBox();
             dgvVideo = new DataGridView();
+            chk = new DataGridViewCheckBoxColumn();
             Id = new DataGridViewTextBoxColumn();
             ChannelName = new DataGridViewTextBoxColumn();
             PlaylistTitle = new DataGridViewTextBoxColumn();
@@ -40,13 +41,13 @@
             Url = new DataGridViewTextBoxColumn();
             groupBox1 = new GroupBox();
             groupBox3 = new GroupBox();
+            progressBar1 = new ProgressBar();
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
-            label4 = new Label();
-            label3 = new Label();
-            label5 = new Label();
-            label2 = new Label();
+            checkBox1 = new CheckBox();
+            textBox1 = new TextBox();
             btnDownload = new Button();
+            btnClear = new Button();
             btnSearch = new Button();
             btnDelete = new Button();
             txtChannel = new TextBox();
@@ -54,17 +55,19 @@
             txtVideoTitle = new TextBox();
             txtPlaylistTitle = new TextBox();
             tabPage2 = new TabPage();
+            groupBox2 = new GroupBox();
             ((System.ComponentModel.ISupportInitialize)dgvVideo).BeginInit();
             groupBox1.SuspendLayout();
             groupBox3.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
+            groupBox2.SuspendLayout();
             SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(4, 34);
+            label1.Location = new Point(9, 31);
             label1.Name = "label1";
             label1.Size = new Size(77, 20);
             label1.TabIndex = 0;
@@ -72,9 +75,9 @@
             // 
             // btnShowVideo
             // 
-            btnShowVideo.Location = new Point(1129, 25);
+            btnShowVideo.Location = new Point(1158, 25);
             btnShowVideo.Name = "btnShowVideo";
-            btnShowVideo.Size = new Size(195, 29);
+            btnShowVideo.Size = new Size(171, 29);
             btnShowVideo.TabIndex = 1;
             btnShowVideo.Text = "Get info from channel";
             btnShowVideo.UseVisualStyleBackColor = true;
@@ -84,23 +87,33 @@
             // 
             txtChannelID.Location = new Point(90, 27);
             txtChannelID.Name = "txtChannelID";
-            txtChannelID.Size = new Size(1033, 27);
+            txtChannelID.Size = new Size(1061, 27);
             txtChannelID.TabIndex = 2;
             // 
             // dgvVideo
             // 
+            dgvVideo.AllowUserToAddRows = false;
+            dgvVideo.AllowUserToDeleteRows = false;
             dgvVideo.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvVideo.BackgroundColor = SystemColors.ActiveCaption;
             dgvVideo.BorderStyle = BorderStyle.None;
             dgvVideo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvVideo.Columns.AddRange(new DataGridViewColumn[] { Id, ChannelName, PlaylistTitle, VideoTitle, Description, Url });
-            dgvVideo.Location = new Point(8, 25);
+            dgvVideo.Columns.AddRange(new DataGridViewColumn[] { chk, Id, ChannelName, PlaylistTitle, VideoTitle, Description, Url });
+            dgvVideo.Location = new Point(8, 31);
             dgvVideo.Name = "dgvVideo";
             dgvVideo.RowHeadersWidth = 51;
             dgvVideo.RowTemplate.Height = 29;
-            dgvVideo.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvVideo.Size = new Size(1308, 465);
+            dgvVideo.Size = new Size(1308, 431);
             dgvVideo.TabIndex = 3;
+            dgvVideo.CellMouseDoubleClick += dgvVideo_CellMouseDoubleClick;
+            // 
+            // chk
+            // 
+            chk.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            chk.HeaderText = "";
+            chk.MinimumWidth = 6;
+            chk.Name = "chk";
+            chk.Width = 50;
             // 
             // Id
             // 
@@ -170,13 +183,21 @@
             // 
             // groupBox3
             // 
+            groupBox3.Controls.Add(progressBar1);
             groupBox3.Controls.Add(dgvVideo);
-            groupBox3.Location = new Point(6, 115);
+            groupBox3.Location = new Point(6, 104);
             groupBox3.Name = "groupBox3";
-            groupBox3.Size = new Size(1324, 496);
+            groupBox3.Size = new Size(1324, 507);
             groupBox3.TabIndex = 4;
             groupBox3.TabStop = false;
             groupBox3.Text = "groupBox3";
+            // 
+            // progressBar1
+            // 
+            progressBar1.Location = new Point(8, 468);
+            progressBar1.Name = "progressBar1";
+            progressBar1.Size = new Size(1308, 29);
+            progressBar1.TabIndex = 4;
             // 
             // tabControl1
             // 
@@ -190,18 +211,14 @@
             // 
             // tabPage1
             // 
-            tabPage1.Controls.Add(btnDownload);
-            tabPage1.Controls.Add(btnSearch);
-            tabPage1.Controls.Add(btnDelete);
+            tabPage1.Controls.Add(textBox1);
             tabPage1.Controls.Add(txtChannel);
             tabPage1.Controls.Add(txtDescription);
             tabPage1.Controls.Add(txtVideoTitle);
             tabPage1.Controls.Add(txtPlaylistTitle);
             tabPage1.Controls.Add(groupBox3);
-            tabPage1.Controls.Add(label2);
-            tabPage1.Controls.Add(label5);
-            tabPage1.Controls.Add(label3);
-            tabPage1.Controls.Add(label4);
+            tabPage1.Controls.Add(groupBox2);
+            tabPage1.Controls.Add(checkBox1);
             tabPage1.Location = new Point(4, 29);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new Padding(3);
@@ -210,57 +227,48 @@
             tabPage1.Text = "Video";
             tabPage1.UseVisualStyleBackColor = true;
             // 
-            // label4
+            // checkBox1
             // 
-            label4.AutoSize = true;
-            label4.Location = new Point(533, 58);
-            label4.Name = "label4";
-            label4.Size = new Size(85, 20);
-            label4.TabIndex = 7;
-            label4.Text = "Description";
+            checkBox1.AutoSize = true;
+            checkBox1.Location = new Point(1124, 79);
+            checkBox1.Name = "checkBox1";
+            checkBox1.Size = new Size(18, 17);
+            checkBox1.TabIndex = 8;
+            checkBox1.UseVisualStyleBackColor = true;
             // 
-            // label3
+            // textBox1
             // 
-            label3.AutoSize = true;
-            label3.Location = new Point(533, 5);
-            label3.Name = "label3";
-            label3.Size = new Size(81, 20);
-            label3.TabIndex = 7;
-            label3.Text = "Video Title";
-            // 
-            // label5
-            // 
-            label5.AutoSize = true;
-            label5.Location = new Point(14, 58);
-            label5.Name = "label5";
-            label5.Size = new Size(88, 20);
-            label5.TabIndex = 7;
-            label5.Text = "Playlist Title";
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(14, 5);
-            label2.Name = "label2";
-            label2.Size = new Size(62, 20);
-            label2.TabIndex = 7;
-            label2.Text = "Channel";
+            textBox1.Location = new Point(10, 74);
+            textBox1.Name = "textBox1";
+            textBox1.PlaceholderText = "Folder Path (Check the checkbox if you want to group by playlist)";
+            textBox1.Size = new Size(1108, 27);
+            textBox1.TabIndex = 7;
             // 
             // btnDownload
             // 
-            btnDownload.Location = new Point(1226, 28);
+            btnDownload.Location = new Point(84, 50);
             btnDownload.Name = "btnDownload";
-            btnDownload.Size = new Size(94, 81);
+            btnDownload.Size = new Size(86, 28);
             btnDownload.TabIndex = 6;
             btnDownload.Text = "Download";
             btnDownload.UseVisualStyleBackColor = true;
             btnDownload.Click += btnDownload_Click;
             // 
+            // btnClear
+            // 
+            btnClear.Location = new Point(84, 18);
+            btnClear.Name = "btnClear";
+            btnClear.Size = new Size(86, 28);
+            btnClear.TabIndex = 6;
+            btnClear.Text = "Clear";
+            btnClear.UseVisualStyleBackColor = true;
+            btnClear.Click += btnClear_Click;
+            // 
             // btnSearch
             // 
-            btnSearch.Location = new Point(1140, 28);
+            btnSearch.Location = new Point(3, 50);
             btnSearch.Name = "btnSearch";
-            btnSearch.Size = new Size(79, 81);
+            btnSearch.Size = new Size(79, 28);
             btnSearch.TabIndex = 6;
             btnSearch.Text = "Search";
             btnSearch.UseVisualStyleBackColor = true;
@@ -268,9 +276,9 @@
             // 
             // btnDelete
             // 
-            btnDelete.Location = new Point(1052, 28);
+            btnDelete.Location = new Point(3, 18);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new Size(79, 81);
+            btnDelete.Size = new Size(79, 28);
             btnDelete.TabIndex = 6;
             btnDelete.Text = "Delete";
             btnDelete.UseVisualStyleBackColor = true;
@@ -278,34 +286,34 @@
             // 
             // txtChannel
             // 
-            txtChannel.Location = new Point(14, 28);
+            txtChannel.Location = new Point(10, 8);
             txtChannel.Name = "txtChannel";
             txtChannel.PlaceholderText = "Channel";
-            txtChannel.Size = new Size(513, 27);
+            txtChannel.Size = new Size(564, 27);
             txtChannel.TabIndex = 5;
             // 
             // txtDescription
             // 
-            txtDescription.Location = new Point(533, 82);
+            txtDescription.Location = new Point(583, 41);
             txtDescription.Name = "txtDescription";
             txtDescription.PlaceholderText = "Description";
-            txtDescription.Size = new Size(513, 27);
+            txtDescription.Size = new Size(564, 27);
             txtDescription.TabIndex = 5;
             // 
             // txtVideoTitle
             // 
-            txtVideoTitle.Location = new Point(533, 28);
+            txtVideoTitle.Location = new Point(583, 8);
             txtVideoTitle.Name = "txtVideoTitle";
             txtVideoTitle.PlaceholderText = "Video Title";
-            txtVideoTitle.Size = new Size(513, 27);
+            txtVideoTitle.Size = new Size(564, 27);
             txtVideoTitle.TabIndex = 5;
             // 
             // txtPlaylistTitle
             // 
-            txtPlaylistTitle.Location = new Point(14, 82);
+            txtPlaylistTitle.Location = new Point(10, 41);
             txtPlaylistTitle.Name = "txtPlaylistTitle";
             txtPlaylistTitle.PlaceholderText = "Playlist Title";
-            txtPlaylistTitle.Size = new Size(513, 27);
+            txtPlaylistTitle.Size = new Size(564, 27);
             txtPlaylistTitle.TabIndex = 5;
             // 
             // tabPage2
@@ -317,6 +325,18 @@
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Download";
             tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // groupBox2
+            // 
+            groupBox2.Controls.Add(btnDownload);
+            groupBox2.Controls.Add(btnDelete);
+            groupBox2.Controls.Add(btnSearch);
+            groupBox2.Controls.Add(btnClear);
+            groupBox2.Location = new Point(1148, -2);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Size = new Size(174, 103);
+            groupBox2.TabIndex = 9;
+            groupBox2.TabStop = false;
             // 
             // Form1
             // 
@@ -334,6 +354,7 @@
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();
+            groupBox2.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -344,12 +365,6 @@
         private TextBox txtChannelID;
         private DataGridView dgvVideo;
         private GroupBox groupBox1;
-        private DataGridViewTextBoxColumn Id;
-        private DataGridViewTextBoxColumn ChannelName;
-        private DataGridViewTextBoxColumn PlaylistTitle;
-        private DataGridViewTextBoxColumn VideoTitle;
-        private DataGridViewTextBoxColumn Description;
-        private DataGridViewTextBoxColumn Url;
         private GroupBox groupBox3;
         private TabControl tabControl1;
         private TabPage tabPage1;
@@ -357,13 +372,21 @@
         private TextBox txtDescription;
         private TextBox txtVideoTitle;
         private TextBox txtPlaylistTitle;
-        private Button btnDownload;
+        private Button btnClear;
         private Button btnSearch;
         private Button btnDelete;
         private TextBox txtChannel;
-        private Label label4;
-        private Label label3;
-        private Label label5;
-        private Label label2;
+        private Button btnDownload;
+        private DataGridViewCheckBoxColumn chk;
+        private DataGridViewTextBoxColumn Id;
+        private DataGridViewTextBoxColumn ChannelName;
+        private DataGridViewTextBoxColumn PlaylistTitle;
+        private DataGridViewTextBoxColumn VideoTitle;
+        private DataGridViewTextBoxColumn Description;
+        private DataGridViewTextBoxColumn Url;
+        private ProgressBar progressBar1;
+        private TextBox textBox1;
+        private CheckBox checkBox1;
+        private GroupBox groupBox2;
     }
 }

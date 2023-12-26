@@ -1,5 +1,3 @@
-using Volo.Abp;
-
 namespace YoutubeSupportApp
 {
     internal static class Program
@@ -12,14 +10,8 @@ namespace YoutubeSupportApp
         {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
-            //ApplicationConfiguration.Initialize();
-            //Application.Run(new Form1());
-
-            using (var application = AbpApplicationFactory.Create<YoutubeSupportAppModule>())
-            {
-                application.Initialize();               
-                Application.Run(new Form1());
-            }
+            ApplicationConfiguration.Initialize();
+            Application.Run(new Form1());
         }
     }
 }

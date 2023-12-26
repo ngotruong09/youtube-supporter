@@ -15,9 +15,5 @@ namespace YoutubeSupportApp.Database
         public string VideoTitle { get; set; }
         public string Description { get; set; }
         public string Url { get; set; }
-        public VideoEntity()
-        {
-            Id = Guid.NewGuid().ToString("N");
-        }
     }
 }
