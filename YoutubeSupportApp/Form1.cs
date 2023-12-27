@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using YoutubeSupportApp.Database;
 using YoutubeSupportApp.Helpers;
 using YoutubeSupportApp.Models;
@@ -13,6 +12,8 @@ namespace YoutubeSupportApp
         private int totalRecords = 0;
         private CheckBox HeaderCheckBox = null;
         private bool IsHeaderCheckBoxClicked = false;
+        private string __playlistTitle = string.Empty;
+        private string __status = string.Empty;
         public Form1()
         {
             InitializeComponent();
@@ -26,6 +27,7 @@ namespace YoutubeSupportApp
             dbContext = new YoutubeDbContext();
             //this.dbContext.Database.EnsureDeleted();
             this.dbContext.Database.EnsureCreated();
+            await SetCbx();
             await Search();
         }
         private void HeaderCheckBox_MouseClick(object sender, MouseEventArgs e)
@@ -55,9 +57,13 @@ namespace YoutubeSupportApp
             if (combineModels.Any())
             {
                 var videos = combineModels.ToVideoEntity();
+                videos.ForEach(x => x.VideoId?.Trim());
+                videos = videos.GroupBy(g => new { g.VideoId })
+                         .Select(g => g.First())
+                         .ToList();
                 await this.dbContext.AddVideos(videos, CHANNELID);
-                dgvVideo.DataSource = videos;
-                ResetView(videos.Count());
+                await SetCbx();
+                await Search();
             }
             waitForm.Close();
         }
@@ -69,17 +75,27 @@ namespace YoutubeSupportApp
                 var item = GetSelect();
                 var ids = item.Select(x => x.Id).ToList();
                 await this.dbContext.Delete(ids);
+                await SetCbx();
                 await Search();
                 waitForm.Close();
             }
         }
+
+        private async Task SetCbx()
+        {
+            cbxPlaylist.DataSource = await this.dbContext.GetPlaylistTitles();
+            __playlistTitle = string.Empty;
+            cbxPlaylist.SelectedIndex = -1;
+        }
+
         private async Task Search()
         {
             var channel = txtChannel.Text;
-            var playlist = txtPlaylistTitle.Text;
+            var playlist = __playlistTitle;
             var videoTitle = txtVideoTitle.Text;
             var desc = txtDescription.Text;
-            var videos = await this.dbContext.Search(channel, playlist, videoTitle, desc);
+            var status = __status;
+            var videos = await this.dbContext.Search(channel, playlist, videoTitle, desc, status);
             dgvVideo.DataSource = videos;
             ResetView(videos.Count());
         }
@@ -90,10 +106,13 @@ namespace YoutubeSupportApp
         private void btnClear_Click(object sender, EventArgs e)
         {
             txtChannel.Text = string.Empty;
-            txtPlaylistTitle.Text = string.Empty;
+            __playlistTitle = string.Empty;
+            cbxPlaylist.SelectedIndex = -1;
             txtVideoTitle.Text = string.Empty;
             txtDescription.Text = string.Empty;
             dgvVideo.DataSource = null;
+            HeaderCheckBox.Checked = false;
+            IsHeaderCheckBoxClicked = false;
             ResetView(0);
         }
         private async void btnDownload_Click(object sender, EventArgs e)
@@ -189,6 +208,10 @@ namespace YoutubeSupportApp
 
         private void bworkerDownload_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
+            if (!timerRefreshForm.Enabled)
+            {
+                timerRefreshForm.Start();
+            }
             var items = GetSelect();
             var tasks = new List<Task>();
             var queue = new ConcurrentQueue<SelectModel>(items);
@@ -207,7 +230,18 @@ namespace YoutubeSupportApp
                                 {
                                     try
                                     {
+                                        using (var db = new YoutubeDbContext())
+                                        {
+                                            await db.UpdateStatusDownload(item.VideoId, nameof(StatusDownload.DOWNLOADING));
+                                        }
+
                                         await clsCommon.DownloadYouTubeVideo(item.Url, txtFolderPath.Text);
+
+                                        using (var db = new YoutubeDbContext())
+                                        {
+                                            await db.UpdateStatusDownload(item.VideoId, nameof(StatusDownload.DONE));
+                                        }
+
                                         bworkerDownload.ReportProgress(0);
                                     }
                                     catch (Exception ex)
@@ -236,17 +270,43 @@ namespace YoutubeSupportApp
             {
                 Task.WaitAll(tasks.ToArray());
             }
+            bworkerDownload.ReportProgress(0);
         }
 
         private void bworkerDownload_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
-            progressBar1.Value += 1;
+            try
+            {
+                progressBar1.Value += 1;
+            }
+            catch
+            {
+            }
         }
 
-        private void bworkerDownload_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        private async void bworkerDownload_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
-            MessageBox.Show("Download Completed");
+            if (timerRefreshForm.Enabled)
+            {
+                timerRefreshForm.Stop();
+            }
+            await Search();
             progressBar1.Value = 0;
+        }
+
+        private async void timerRefreshForm_Tick(object sender, EventArgs e)
+        {
+            await Search();
+        }
+
+        private void cbxPlaylist_SelectedValueChanged(object sender, EventArgs e)
+        {
+            __playlistTitle = cbxPlaylist.SelectedItem as string;
+        }
+
+        private void cbxStatus_SelectedValueChanged(object sender, EventArgs e)
+        {
+            __status = cbxStatus.SelectedItem as string;
         }
     }
 }

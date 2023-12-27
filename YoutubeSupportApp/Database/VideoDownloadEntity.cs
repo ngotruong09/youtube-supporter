@@ -19,7 +19,7 @@ namespace YoutubeSupportApp.Database
         WAITING,
         DOWNLOADING,
         PENDING,
-        DOWNLOADED,
+        DONE,
         FAIL
     }
 }

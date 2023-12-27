@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System;
 using YoutubeSupportApp.Models;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace YoutubeSupportApp.Database
 {
@@ -18,19 +21,25 @@ namespace YoutubeSupportApp.Database
         {
             optionsBuilder.UseSqlite($"Data Source={DbPath}");
         }
-        public async Task AddVideos(List<VideoEntity> videos, string channelId)
+        public async Task<int> AddVideos(List<VideoEntity> videos, string channelId)
         {
-            var videoOlds = this.VideoEntities.Where(x => x.ChannelId == channelId).ToList();
-            if (videoOlds.Count > 0)
+            int count = 0;
+            if (videos.Any())
             {
-                this.VideoEntities.RemoveRange(videoOlds);
+                var videoOlds = this.VideoEntities.Where(x => x.ChannelId == channelId).ToList();
+                if (videoOlds.Count > 0)
+                {
+                    this.VideoEntities.RemoveRange(videoOlds);
+                    await this.SaveChangesAsync();
+                }
+                videos.ForEach(x => x.Id = Guid.NewGuid().ToString("N"));
+                await this.VideoEntities.AddRangeAsync(videos);
                 await this.SaveChangesAsync();
+                count = videos.Count;
             }
-            videos.ForEach(x => x.Id = Guid.NewGuid().ToString("N"));
-            await this.VideoEntities.AddRangeAsync(videos);
-            await this.SaveChangesAsync();
+            return count;
         }
-        public async Task<List<VideoShowModel>> Search(string channel, string playlist, string video, string description)
+        public async Task<List<VideoShowModel>> Search(string channel, string playlist, string video, string description, string status)
         {
             var query = from v in this.VideoEntities
                         join d in this.VideoDownloadEntities on v.VideoId equals d.VideoId into g1
@@ -56,6 +65,9 @@ namespace YoutubeSupportApp.Database
                  .WhereIf(!string.IsNullOrEmpty(playlist), x => x.PlaylistTitle.Contains(playlist))
                  .WhereIf(!string.IsNullOrEmpty(video), x => x.VideoTitle.Contains(video))
                  .WhereIf(!string.IsNullOrEmpty(description), x => x.Description.Contains(description))
+                 .WhereIf(!string.IsNullOrEmpty(status), x => x.Status == status)
+                 .OrderByDescending(p => string.IsNullOrEmpty(p.Status) == false)
+                 .ThenBy(p => p.Status)
                  .ToListAsync();
             return videos;
         }
@@ -70,7 +82,7 @@ namespace YoutubeSupportApp.Database
         }
         public async Task AddDownload(List<VideoDownloadEntity> videos)
         {
-            var videoIDs = videos.Select(x => x.VideoId).ToList();
+            var videoIDs = videos.Select(x => x.VideoId.Trim()).ToList();
             var videoOlds = this.VideoDownloadEntities.Where(x => videoIDs.Contains(x.VideoId)).ToList();
             if (videoOlds.Count > 0)
             {
@@ -80,6 +92,23 @@ namespace YoutubeSupportApp.Database
             videos.ForEach(x => x.Id = Guid.NewGuid().ToString("N"));
             await this.VideoDownloadEntities.AddRangeAsync(videos);
             await this.SaveChangesAsync();
+        }
+        public async Task UpdateStatusDownload(string videoId, string status)
+        {
+            var downloads = this.VideoDownloadEntities.Where(x => x.VideoId == videoId).ToList();
+            if (downloads.Any())
+            {
+                var items = downloads.First();
+                items.Status = status;
+                await this.SaveChangesAsync();
+            }
+        }
+        public async Task<List<string>> GetPlaylistTitles()
+        {            
+            var playlistTitles = await this.VideoEntities.GroupBy(g => new { g.PlaylistTitle })
+                     .Select(g => g.First().PlaylistTitle)
+                     .ToListAsync();
+            return playlistTitles;
         }
     }
 }
