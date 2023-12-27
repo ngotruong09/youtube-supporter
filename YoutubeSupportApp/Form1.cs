@@ -29,6 +29,15 @@ namespace YoutubeSupportApp
             this.dbContext.Database.EnsureCreated();
             await SetCbx();
             await Search();
+            // guide
+            txtGuide.Text = @$"public static async Task<string> ProcessCard(CreditCard creditCard)
+{{
+    await Task.Delay(1000);
+    string message = $""Credit Card Number: {{creditCard.CardNumber}} Name: {{creditCard.Name}} Processed"";
+    Console.WriteLine($""Credit Card Number: {{creditCard.CardNumber}} Processed"");
+    return message;
+}}";
+
         }
         private void HeaderCheckBox_MouseClick(object sender, MouseEventArgs e)
         {
@@ -142,6 +151,7 @@ namespace YoutubeSupportApp
         }
         private async Task DownloadVideo(List<SelectModel> items)
         {
+            timer1.Start();
             // save download ban dau
             var videoDownloads = items.Select(x => new VideoDownloadEntity
             {
@@ -154,9 +164,9 @@ namespace YoutubeSupportApp
             }).ToList();
             await this.dbContext.AddDownload(videoDownloads);
             // run background worker
-            progressBar1.Value = 0;
-            progressBar1.Maximum = items.Count;
-            bworkerDownload.RunWorkerAsync();
+            progressBar1.Value = 1;
+            progressBar1.Maximum = items.Count + 1;
+            bworkerDownload.RunWorkerAsync(items);
         }
         private void ResetView(int total)
         {
@@ -218,11 +228,7 @@ namespace YoutubeSupportApp
         }
         private void bworkerDownload_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            if (!timerRefreshForm.Enabled)
-            {
-                timerRefreshForm.Start();
-            }
-            var items = GetSelect();
+            var items = e.Argument as List<SelectModel>;
             var tasks = new List<Task>();
             var queue = new ConcurrentQueue<SelectModel>(items);
             bool isExist = false;
@@ -294,16 +300,9 @@ namespace YoutubeSupportApp
         }
         private async void bworkerDownload_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
-            if (timerRefreshForm.Enabled)
-            {
-                timerRefreshForm.Stop();
-            }
             await Search();
             progressBar1.Value = 0;
-        }
-        private async void timerRefreshForm_Tick(object sender, EventArgs e)
-        {
-            await Search();
+            timer1.Stop();
         }
         private void cbxPlaylist_SelectedValueChanged(object sender, EventArgs e)
         {
@@ -346,6 +345,10 @@ namespace YoutubeSupportApp
                 }).ToList();
                 await DownloadVideo(items);
             }
+        }
+        private async void timer1_Tick(object sender, EventArgs e)
+        {
+            await Search();
         }
     }
 }

@@ -36,7 +36,6 @@
             chk = new DataGridViewCheckBoxColumn();
             Status = new DataGridViewTextBoxColumn();
             DownloadDate = new DataGridViewTextBoxColumn();
-            Id = new DataGridViewTextBoxColumn();
             ChannelName = new DataGridViewTextBoxColumn();
             PlaylistTitle = new DataGridViewTextBoxColumn();
             VideoTitle = new DataGridViewTextBoxColumn();
@@ -44,6 +43,7 @@
             Url = new DataGridViewTextBoxColumn();
             ChannelId = new DataGridViewTextBoxColumn();
             VideoID = new DataGridViewTextBoxColumn();
+            Id = new DataGridViewTextBoxColumn();
             groupBox1 = new GroupBox();
             groupBox3 = new GroupBox();
             progressBar1 = new ProgressBar();
@@ -63,13 +63,17 @@
             btnClear = new Button();
             label2 = new Label();
             label3 = new Label();
+            tabPage2 = new TabPage();
+            txtGuide = new TextBox();
             bworkerDownload = new System.ComponentModel.BackgroundWorker();
             timerRefreshForm = new System.Windows.Forms.Timer(components);
+            timer1 = new System.Windows.Forms.Timer(components);
             ((System.ComponentModel.ISupportInitialize)dgvVideo).BeginInit();
             groupBox1.SuspendLayout();
             groupBox3.SuspendLayout();
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
+            tabPage2.SuspendLayout();
             SuspendLayout();
             // 
             // label1
@@ -108,7 +112,7 @@
             dgvVideo.BackgroundColor = SystemColors.ActiveCaption;
             dgvVideo.BorderStyle = BorderStyle.None;
             dgvVideo.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvVideo.Columns.AddRange(new DataGridViewColumn[] { chk, Status, DownloadDate, Id, ChannelName, PlaylistTitle, VideoTitle, Description, Url, ChannelId, VideoID });
+            dgvVideo.Columns.AddRange(new DataGridViewColumn[] { chk, Status, DownloadDate, ChannelName, PlaylistTitle, VideoTitle, Description, Url, ChannelId, VideoID, Id });
             dgvVideo.Location = new Point(8, 23);
             dgvVideo.Name = "dgvVideo";
             dgvVideo.RowHeadersWidth = 51;
@@ -143,15 +147,6 @@
             DownloadDate.MinimumWidth = 6;
             DownloadDate.Name = "DownloadDate";
             DownloadDate.Width = 70;
-            // 
-            // Id
-            // 
-            Id.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            Id.DataPropertyName = "Id";
-            Id.HeaderText = "Id";
-            Id.MinimumWidth = 6;
-            Id.Name = "Id";
-            Id.Width = 51;
             // 
             // ChannelName
             // 
@@ -214,6 +209,15 @@
             VideoID.Name = "VideoID";
             VideoID.Visible = false;
             // 
+            // Id
+            // 
+            Id.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            Id.DataPropertyName = "Id";
+            Id.HeaderText = "Id";
+            Id.MinimumWidth = 6;
+            Id.Name = "Id";
+            Id.Width = 51;
+            // 
             // groupBox1
             // 
             groupBox1.Controls.Add(txtChannelID);
@@ -247,6 +251,7 @@
             // tabControl1
             // 
             tabControl1.Controls.Add(tabPage1);
+            tabControl1.Controls.Add(tabPage2);
             tabControl1.Location = new Point(11, 89);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
@@ -421,6 +426,27 @@
             label3.TabIndex = 0;
             label3.Text = "Playlist Title";
             // 
+            // tabPage2
+            // 
+            tabPage2.Controls.Add(txtGuide);
+            tabPage2.Location = new Point(4, 29);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Padding = new Padding(3);
+            tabPage2.Size = new Size(1336, 847);
+            tabPage2.TabIndex = 1;
+            tabPage2.Text = "How to use";
+            tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // txtGuide
+            // 
+            txtGuide.Dock = DockStyle.Fill;
+            txtGuide.Location = new Point(3, 3);
+            txtGuide.Multiline = true;
+            txtGuide.Name = "txtGuide";
+            txtGuide.ReadOnly = true;
+            txtGuide.Size = new Size(1330, 841);
+            txtGuide.TabIndex = 0;
+            // 
             // bworkerDownload
             // 
             bworkerDownload.WorkerReportsProgress = true;
@@ -428,10 +454,10 @@
             bworkerDownload.ProgressChanged += bworkerDownload_ProgressChanged;
             bworkerDownload.RunWorkerCompleted += bworkerDownload_RunWorkerCompleted;
             // 
-            // timerRefreshForm
+            // timer1
             // 
-            timerRefreshForm.Interval = 1000;
-            timerRefreshForm.Tick += timerRefreshForm_Tick;
+            timer1.Interval = 5000;
+            timer1.Tick += timer1_Tick;
             // 
             // Form1
             // 
@@ -451,6 +477,8 @@
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();
+            tabPage2.ResumeLayout(false);
+            tabPage2.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -474,17 +502,6 @@
         private ProgressBar progressBar1;
         private TextBox txtFolderPath;
         private System.ComponentModel.BackgroundWorker bworkerDownload;
-        private DataGridViewCheckBoxColumn chk;
-        private DataGridViewTextBoxColumn Status;
-        private DataGridViewTextBoxColumn DownloadDate;
-        private DataGridViewTextBoxColumn Id;
-        private DataGridViewTextBoxColumn ChannelName;
-        private DataGridViewTextBoxColumn PlaylistTitle;
-        private DataGridViewTextBoxColumn VideoTitle;
-        private DataGridViewTextBoxColumn Description;
-        private DataGridViewTextBoxColumn Url;
-        private DataGridViewTextBoxColumn ChannelId;
-        private DataGridViewTextBoxColumn VideoID;
         private System.Windows.Forms.Timer timerRefreshForm;
         private ComboBox cbxPlaylist;
         private ComboBox cbxStatus;
@@ -492,5 +509,19 @@
         private Label label3;
         private Button btnContinue;
         private Button btnClearAll;
+        private System.Windows.Forms.Timer timer1;
+        private DataGridViewCheckBoxColumn chk;
+        private DataGridViewTextBoxColumn Status;
+        private DataGridViewTextBoxColumn DownloadDate;
+        private DataGridViewTextBoxColumn ChannelName;
+        private DataGridViewTextBoxColumn PlaylistTitle;
+        private DataGridViewTextBoxColumn VideoTitle;
+        private DataGridViewTextBoxColumn Description;
+        private DataGridViewTextBoxColumn Url;
+        private DataGridViewTextBoxColumn ChannelId;
+        private DataGridViewTextBoxColumn VideoID;
+        private DataGridViewTextBoxColumn Id;
+        private TabPage tabPage2;
+        private TextBox txtGuide;
     }
 }
