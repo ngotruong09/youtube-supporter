@@ -80,14 +80,12 @@ namespace YoutubeSupportApp
                 waitForm.Close();
             }
         }
-
         private async Task SetCbx()
         {
             cbxPlaylist.DataSource = await this.dbContext.GetPlaylistTitles();
             __playlistTitle = string.Empty;
             cbxPlaylist.SelectedIndex = -1;
         }
-
         private async Task Search()
         {
             var channel = txtChannel.Text;
@@ -105,14 +103,23 @@ namespace YoutubeSupportApp
         }
         private void btnClear_Click(object sender, EventArgs e)
         {
+            Clear();
+        }
+        private void Clear()
+        {
             txtChannel.Text = string.Empty;
             __playlistTitle = string.Empty;
+            __status = string.Empty;
             cbxPlaylist.SelectedIndex = -1;
             txtVideoTitle.Text = string.Empty;
             txtDescription.Text = string.Empty;
             dgvVideo.DataSource = null;
             HeaderCheckBox.Checked = false;
             IsHeaderCheckBoxClicked = false;
+            txtFolderPath.Text = string.Empty;
+            cbxPlaylist.Text = string.Empty;
+            cbxStatus.SelectedIndex = -1;
+            cbxStatus.Text = string.Empty;
             ResetView(0);
         }
         private async void btnDownload_Click(object sender, EventArgs e)
@@ -130,22 +137,26 @@ namespace YoutubeSupportApp
             var items = GetSelect();
             if (items.Any())
             {
-                // save download ban dau
-                var videoDownloads = items.Select(x => new VideoDownloadEntity
-                {
-                    ChannelId = x.ChannelId,
-                    VideoTitle = x.VideoTitle,
-                    VideoId = x.VideoId,
-                    DownloadDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
-                    FolderPath = txtFolderPath.Text,
-                    Status = nameof(StatusDownload.WAITING)
-                }).ToList();
-                await this.dbContext.AddDownload(videoDownloads);
-                // run background worker
-                progressBar1.Value = 0;
-                progressBar1.Maximum = items.Count;
-                bworkerDownload.RunWorkerAsync();
+                await DownloadVideo(items);
             }
+        }
+        private async Task DownloadVideo(List<SelectModel> items)
+        {
+            // save download ban dau
+            var videoDownloads = items.Select(x => new VideoDownloadEntity
+            {
+                ChannelId = x.ChannelId,
+                VideoTitle = x.VideoTitle,
+                VideoId = x.VideoId,
+                DownloadDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                FolderPath = txtFolderPath.Text,
+                Status = nameof(StatusDownload.WAITING)
+            }).ToList();
+            await this.dbContext.AddDownload(videoDownloads);
+            // run background worker
+            progressBar1.Value = 0;
+            progressBar1.Maximum = items.Count;
+            bworkerDownload.RunWorkerAsync();
         }
         private void ResetView(int total)
         {
@@ -205,7 +216,6 @@ namespace YoutubeSupportApp
                 }
             }
         }
-
         private void bworkerDownload_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             if (!timerRefreshForm.Enabled)
@@ -272,7 +282,6 @@ namespace YoutubeSupportApp
             }
             bworkerDownload.ReportProgress(0);
         }
-
         private void bworkerDownload_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
             try
@@ -283,7 +292,6 @@ namespace YoutubeSupportApp
             {
             }
         }
-
         private async void bworkerDownload_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
             if (timerRefreshForm.Enabled)
@@ -293,20 +301,51 @@ namespace YoutubeSupportApp
             await Search();
             progressBar1.Value = 0;
         }
-
         private async void timerRefreshForm_Tick(object sender, EventArgs e)
         {
             await Search();
         }
-
         private void cbxPlaylist_SelectedValueChanged(object sender, EventArgs e)
         {
             __playlistTitle = cbxPlaylist.SelectedItem as string;
         }
-
         private void cbxStatus_SelectedValueChanged(object sender, EventArgs e)
         {
             __status = cbxStatus.SelectedItem as string;
+        }
+        private void btnClearAll_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Do you want to delete all?", "Confirm", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                this.dbContext.Database.EnsureDeleted();
+                Clear();
+            }
+        }
+        private async void btnContinue_Click(object sender, EventArgs e)
+        {
+            var list = await this.dbContext.GetDownloading();
+            if (list.Any())
+            {
+                if (string.IsNullOrEmpty(txtFolderPath.Text))
+                {
+                    MessageBox.Show("Nhập đường dẫn lưu video");
+                    return;
+                }
+                if (Directory.Exists(txtFolderPath.Text) == false)
+                {
+                    MessageBox.Show("Đường dẫn lưu video không tồn tại");
+                    return;
+                }
+                var items = list.Select(x => new SelectModel
+                {
+                    ChannelId = x.ChannelId,
+                    Id = x.Id,
+                    Url = x.Url,
+                    VideoId = x.VideoId,
+                    VideoTitle = x.VideoTitle
+                }).ToList();
+                await DownloadVideo(items);
+            }
         }
     }
 }

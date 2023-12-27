@@ -110,5 +110,31 @@ namespace YoutubeSupportApp.Database
                      .ToListAsync();
             return playlistTitles;
         }
+        public async Task<List<VideoShowModel>> GetDownloading()
+        {
+            var query = from v in this.VideoEntities
+                        join d in this.VideoDownloadEntities on v.VideoId equals d.VideoId into g1
+                        from subd in g1.DefaultIfEmpty()
+                        where subd.Status == "WAITING" || subd.Status == "DOWNLOADING"
+                        select new VideoShowModel
+                        {
+                            Id = v.Id,
+                            VideoId = v.VideoId,
+                            ChannelId = v.ChannelId,
+                            ChannelName = v.ChannelName,
+                            PlaylistId = v.PlaylistId,
+                            PlaylistTitle = v.PlaylistTitle,
+                            VideoCount = v.VideoCount,
+                            VideoTitle = v.VideoTitle,
+                            Description = v.Description,
+                            Url = v.Url,
+                            FolderPath = subd.FolderPath,
+                            DownloadDate = subd.DownloadDate,
+                            Status = subd.Status
+                        }
+                        ;
+            var list = await query.ToListAsync();
+            return list;
+        }
     }
 }
