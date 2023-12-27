@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
 using YoutubeSupportApp.Database;
 using YoutubeSupportApp.Helpers;
 using YoutubeSupportApp.Models;
@@ -19,16 +20,13 @@ namespace YoutubeSupportApp
             AddHeaderCheckBox();
             HeaderCheckBox.MouseClick += new MouseEventHandler(HeaderCheckBox_MouseClick);
         }
-        protected override void OnLoad(EventArgs e)
+        protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             dbContext = new YoutubeDbContext();
             //this.dbContext.Database.EnsureDeleted();
             this.dbContext.Database.EnsureCreated();
-            this.dbContext.VideoEntities.Load();
-            var total = dbContext.VideoEntities.Count();
-            ResetView(total);
-            this.dgvVideo.DataSource = dbContext.VideoEntities.Local.ToBindingList();
+            await Search();
         }
         private void HeaderCheckBox_MouseClick(object sender, MouseEventArgs e)
         {
@@ -121,7 +119,7 @@ namespace YoutubeSupportApp
                     VideoId = x.VideoId,
                     DownloadDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
                     FolderPath = txtFolderPath.Text,
-                    Status = nameof(StatusDownload.WAITING)                    
+                    Status = nameof(StatusDownload.WAITING)
                 }).ToList();
                 await this.dbContext.AddDownload(videoDownloads);
                 // run background worker
@@ -138,7 +136,7 @@ namespace YoutubeSupportApp
         private void AddHeaderCheckBox()
         {
             HeaderCheckBox = new CheckBox();
-            HeaderCheckBox.Location = new Point(67, 8);
+            HeaderCheckBox.Location = new Point(69, 5);
             HeaderCheckBox.Size = new Size(16, 16);
             this.dgvVideo.Controls.Add(HeaderCheckBox);
         }
@@ -189,25 +187,55 @@ namespace YoutubeSupportApp
             }
         }
 
-        private async void bworkerDownload_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        private void bworkerDownload_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var items = GetSelect();
-            var tasks = new List<Task<bool>>();
-
-            for (int i = 0; i < items.Count; i++)
+            var tasks = new List<Task>();
+            var queue = new ConcurrentQueue<SelectModel>(items);
+            bool isExist = false;
+            while (true)
             {
-                var item = items[i];
-                var response = DownloadVideo(item.Url, txtFolderPath.Text);
-                tasks.Add(response);
+                for (int i = 0; i < 10; i++)
+                {
+                    if (queue.Count > 0)
+                    {
+                        // DoWork
+                        tasks.Add(
+                            Task.Run(async () =>
+                            {
+                                if (queue.TryDequeue(out var item))
+                                {
+                                    try
+                                    {
+                                        await clsCommon.DownloadYouTubeVideo(item.Url, txtFolderPath.Text);
+                                        bworkerDownload.ReportProgress(0);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        //Console.WriteLine(ex.ToString());
+                                    }
+                                }
+                            }));
+                    }
+                    else
+                    {
+                        isExist = true;
+                        break;
+                    }
+                }
+                if (isExist == false)
+                {
+                    Task.WaitAll(tasks.ToArray());
+                }
+                else
+                {
+                    break;
+                }
             }
-            await Task.WhenAll(tasks);
-        }
-
-        private async Task<bool> DownloadVideo(string url, string path)
-        {
-            var flag = await clsCommon.DownloadYouTubeVideo(url, path);
-            bworkerDownload.ReportProgress(0);
-            return flag;
+            if (tasks.Count > 0)
+            {
+                Task.WaitAll(tasks.ToArray());
+            }
         }
 
         private void bworkerDownload_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
