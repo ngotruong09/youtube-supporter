@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using YoutubeSupportApp.Database;
 using YoutubeSupportApp.Helpers;
+using YoutubeSupportApp.Models;
 
 namespace YoutubeSupportApp
 {
@@ -22,6 +23,7 @@ namespace YoutubeSupportApp
         {
             base.OnLoad(e);
             dbContext = new YoutubeDbContext();
+            //this.dbContext.Database.EnsureDeleted();
             this.dbContext.Database.EnsureCreated();
             this.dbContext.VideoEntities.Load();
             var total = dbContext.VideoEntities.Count();
@@ -66,7 +68,8 @@ namespace YoutubeSupportApp
             if (MessageBox.Show("Do you want to delete?", "Confirm", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 waitForm.Show(this);
-                var ids = GetIdSelect();
+                var item = GetSelect();
+                var ids = item.Select(x => x.Id).ToList();
                 await this.dbContext.Delete(ids);
                 await Search();
                 waitForm.Close();
@@ -97,8 +100,35 @@ namespace YoutubeSupportApp
         }
         private async void btnDownload_Click(object sender, EventArgs e)
         {
-           
-            
+            if (string.IsNullOrEmpty(txtFolderPath.Text))
+            {
+                MessageBox.Show("Nhập đường dẫn lưu video");
+                return;
+            }
+            if (Directory.Exists(txtFolderPath.Text) == false)
+            {
+                MessageBox.Show("Đường dẫn lưu video không tồn tại");
+                return;
+            }
+            var items = GetSelect();
+            if (items.Any())
+            {
+                // save download ban dau
+                var videoDownloads = items.Select(x => new VideoDownloadEntity
+                {
+                    ChannelId = x.ChannelId,
+                    VideoTitle = x.VideoTitle,
+                    VideoId = x.VideoId,
+                    DownloadDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                    FolderPath = txtFolderPath.Text,
+                    Status = nameof(StatusDownload.WAITING)                    
+                }).ToList();
+                await this.dbContext.AddDownload(videoDownloads);
+                // run background worker
+                progressBar1.Value = 0;
+                progressBar1.Maximum = items.Count;
+                bworkerDownload.RunWorkerAsync();
+            }
         }
         private void ResetView(int total)
         {
@@ -122,15 +152,27 @@ namespace YoutubeSupportApp
             dgvVideo.RefreshEdit();
             IsHeaderCheckBoxClicked = false;
         }
-        private List<string> GetIdSelect()
+        private List<SelectModel> GetSelect()
         {
-            var res = new List<string>();
+            var res = new List<SelectModel>();
             for (int i = 0; i < dgvVideo.Rows.Count; i++)
             {
                 if (Convert.ToBoolean(dgvVideo.Rows[i].Cells["chk"].Value) == true)
                 {
-                    var id = dgvVideo.Rows[i].Cells["Id"].Value.ToString();
-                    res.Add(id);
+                    var id = dgvVideo.Rows[i].Cells["Id"].Value?.ToString();
+                    var videoTitle = dgvVideo.Rows[i].Cells["VideoTitle"].Value?.ToString();
+                    var url = dgvVideo.Rows[i].Cells["Url"].Value?.ToString();
+                    var videoId = dgvVideo.Rows[i].Cells["VideoId"].Value?.ToString();
+                    var channelId = dgvVideo.Rows[i].Cells["ChannelId"].Value?.ToString();
+                    var item = new SelectModel
+                    {
+                        Id = id,
+                        VideoTitle = videoTitle,
+                        Url = url,
+                        VideoId = videoId,
+                        ChannelId = channelId
+                    };
+                    res.Add(item);
                 }
             }
             return res;
@@ -140,11 +182,43 @@ namespace YoutubeSupportApp
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 var value = dgvVideo.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
-                if(value != null)
+                if (value != null)
                 {
                     Clipboard.SetText(value.ToString());
                 }
             }
+        }
+
+        private async void bworkerDownload_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            var items = GetSelect();
+            var tasks = new List<Task<bool>>();
+
+            for (int i = 0; i < items.Count; i++)
+            {
+                var item = items[i];
+                var response = DownloadVideo(item.Url, txtFolderPath.Text);
+                tasks.Add(response);
+            }
+            await Task.WhenAll(tasks);
+        }
+
+        private async Task<bool> DownloadVideo(string url, string path)
+        {
+            var flag = await clsCommon.DownloadYouTubeVideo(url, path);
+            bworkerDownload.ReportProgress(0);
+            return flag;
+        }
+
+        private void bworkerDownload_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
+        {
+            progressBar1.Value += 1;
+        }
+
+        private void bworkerDownload_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+            MessageBox.Show("Download Completed");
+            progressBar1.Value = 0;
         }
     }
 }

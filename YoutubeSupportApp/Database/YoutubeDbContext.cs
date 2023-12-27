@@ -49,5 +49,18 @@ namespace YoutubeSupportApp.Database
                 await this.SaveChangesAsync();
             }
         }
+        public async Task AddDownload(List<VideoDownloadEntity> videos)
+        {
+            var videoIDs = videos.Select(x => x.VideoId).ToList();
+            var videoOlds = this.VideoDownloadEntities.Where(x => videoIDs.Contains(x.VideoId)).ToList();
+            if (videoOlds.Count > 0)
+            {
+                this.VideoDownloadEntities.RemoveRange(videoOlds);
+                await this.SaveChangesAsync();
+            }
+            videos.ForEach(x => x.Id = Guid.NewGuid().ToString("N"));
+            await this.VideoDownloadEntities.AddRangeAsync(videos);
+            await this.SaveChangesAsync();
+        }
     }
 }
