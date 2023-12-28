@@ -15,7 +15,8 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.25" />		 
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="6.0.25" />
+		<PackageReference Include="SQLitePCLRaw.bundle_winsqlite3" Version="2.1.7" />		 
 		<PackageReference Include="Volo.Abp.Core" Version="6.0.3" />
 		<PackageReference Include="YoutubeExplode" Version="6.3.9" />
 	</ItemGroup>
