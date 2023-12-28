@@ -26,6 +26,7 @@ namespace YoutubeSupportApp.Database
             int count = 0;
             if (videos.Any())
             {
+                await this.Database.EnsureCreatedAsync();
                 var videoOlds = this.VideoEntities.Where(x => x.ChannelId == channelId).ToList();
                 if (videoOlds.Count > 0)
                 {
@@ -41,6 +42,7 @@ namespace YoutubeSupportApp.Database
         }
         public async Task<List<VideoShowModel>> Search(string channel, string playlist, string video, string description, string status)
         {
+            await this.Database.EnsureCreatedAsync();
             var query = from v in this.VideoEntities
                         join d in this.VideoDownloadEntities on v.VideoId equals d.VideoId into g1
                         from subd in g1.DefaultIfEmpty()
@@ -65,7 +67,7 @@ namespace YoutubeSupportApp.Database
                  .WhereIf(!string.IsNullOrEmpty(playlist), x => x.PlaylistTitle.Contains(playlist))
                  .WhereIf(!string.IsNullOrEmpty(video), x => x.VideoTitle.Contains(video))
                  .WhereIf(!string.IsNullOrEmpty(description), x => x.Description.Contains(description))
-                 .WhereIf(!string.IsNullOrEmpty(status), x => x.Status == status)
+                 .WhereIf(!string.IsNullOrEmpty(status), x => x.Status == (status == "Chưa download" ? null : status))
                  .OrderByDescending(p => string.IsNullOrEmpty(p.Status) == false)
                  .ThenBy(p => p.Status)
                  .ToListAsync();
@@ -73,6 +75,7 @@ namespace YoutubeSupportApp.Database
         }
         public async Task Delete(List<string> ids)
         {
+            await this.Database.EnsureCreatedAsync();
             var videoOlds = this.VideoEntities.Where(x => ids.Contains(x.Id)).ToList();
             if (videoOlds.Count > 0)
             {
@@ -82,6 +85,7 @@ namespace YoutubeSupportApp.Database
         }
         public async Task AddDownload(List<VideoDownloadEntity> videos)
         {
+            await this.Database.EnsureCreatedAsync();
             var videoIDs = videos.Select(x => x.VideoId.Trim()).ToList();
             var videoOlds = this.VideoDownloadEntities.Where(x => videoIDs.Contains(x.VideoId)).ToList();
             if (videoOlds.Count > 0)
@@ -95,6 +99,7 @@ namespace YoutubeSupportApp.Database
         }
         public async Task UpdateStatusDownload(string videoId, string status)
         {
+            await this.Database.EnsureCreatedAsync();
             var downloads = this.VideoDownloadEntities.Where(x => x.VideoId == videoId).ToList();
             if (downloads.Any())
             {
@@ -104,7 +109,8 @@ namespace YoutubeSupportApp.Database
             }
         }
         public async Task<List<string>> GetPlaylistTitles()
-        {            
+        {
+            await this.Database.EnsureCreatedAsync();
             var playlistTitles = await this.VideoEntities.GroupBy(g => new { g.PlaylistTitle })
                      .Select(g => g.First().PlaylistTitle)
                      .ToListAsync();
@@ -112,10 +118,11 @@ namespace YoutubeSupportApp.Database
         }
         public async Task<List<VideoShowModel>> GetDownloading()
         {
+            await this.Database.EnsureCreatedAsync();
             var query = from v in this.VideoEntities
                         join d in this.VideoDownloadEntities on v.VideoId equals d.VideoId into g1
                         from subd in g1.DefaultIfEmpty()
-                        where subd.Status == "WAITING" || subd.Status == "DOWNLOADING"
+                        where subd.Status == "Đang chờ" || subd.Status == "Đang download"
                         select new VideoShowModel
                         {
                             Id = v.Id,

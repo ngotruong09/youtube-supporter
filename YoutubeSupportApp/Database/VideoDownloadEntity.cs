@@ -13,13 +13,4 @@ namespace YoutubeSupportApp.Database
         public string DownloadDate {  get; set; }
         public string Status { get; set; }
     }
-
-    public enum StatusDownload
-    {
-        WAITING,
-        DOWNLOADING,
-        PENDING,
-        DONE,
-        FAIL
-    }
 }

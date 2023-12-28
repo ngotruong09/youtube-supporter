@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using JetBrains.Annotations;
+using System.Collections.Concurrent;
 using YoutubeSupportApp.Database;
 using YoutubeSupportApp.Helpers;
 using YoutubeSupportApp.Models;
@@ -66,10 +67,12 @@ namespace YoutubeSupportApp
             if (combineModels.Any())
             {
                 var videos = combineModels.ToVideoEntity();
-                videos.ForEach(x => x.VideoId?.Trim());
-                videos = videos.GroupBy(g => new { g.VideoId })
-                         .Select(g => g.First())
-                         .ToList();
+                videos.ForEach(x =>
+                {
+                    x.VideoId?.Trim();
+                    x.VideoTitle?.Trim();
+                });
+                videos = videos.Where(x=> "Private video".Equals(x.VideoTitle) == false).GroupBy(g => new { g.VideoId }).Select(g => g.First()).ToList();
                 await this.dbContext.AddVideos(videos, CHANNELID);
                 await SetCbx();
                 await Search();
@@ -80,13 +83,16 @@ namespace YoutubeSupportApp
         {
             if (MessageBox.Show("Do you want to delete?", "Confirm", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                waitForm.Show(this);
                 var item = GetSelect();
-                var ids = item.Select(x => x.Id).ToList();
-                await this.dbContext.Delete(ids);
-                await SetCbx();
-                await Search();
-                waitForm.Close();
+                if (item.Any())
+                {
+                    waitForm.Show(this);
+                    var ids = item.Select(x => x.Id).ToList();
+                    await this.dbContext.Delete(ids);
+                    await SetCbx();
+                    await Search();
+                    waitForm.Close();
+                }
             }
         }
         private async Task SetCbx()
@@ -104,15 +110,17 @@ namespace YoutubeSupportApp
             var status = __status;
             var videos = await this.dbContext.Search(channel, playlist, videoTitle, desc, status);
             dgvVideo.DataSource = videos;
+            HeaderCheckBox.Checked = false;
             ResetView(videos.Count());
         }
         private async void btnSearch_Click(object sender, EventArgs e)
         {
             await Search();
         }
-        private void btnClear_Click(object sender, EventArgs e)
+        private async void btnClear_Click(object sender, EventArgs e)
         {
             Clear();
+            await Search();
         }
         private void Clear()
         {
@@ -144,6 +152,11 @@ namespace YoutubeSupportApp
                 return;
             }
             var items = GetSelect();
+            if (!items.Any())
+            {
+                MessageBox.Show("Chọn video cần download");
+                return;
+            }
             if (items.Any())
             {
                 await DownloadVideo(items);
@@ -160,7 +173,7 @@ namespace YoutubeSupportApp
                 VideoId = x.VideoId,
                 DownloadDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
                 FolderPath = txtFolderPath.Text,
-                Status = nameof(StatusDownload.WAITING)
+                Status = "Đang chờ"
             }).ToList();
             await this.dbContext.AddDownload(videoDownloads);
             // run background worker
@@ -234,7 +247,7 @@ namespace YoutubeSupportApp
             bool isExist = false;
             while (true)
             {
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 20; i++)
                 {
                     if (queue.Count > 0)
                     {
@@ -248,14 +261,14 @@ namespace YoutubeSupportApp
                                     {
                                         using (var db = new YoutubeDbContext())
                                         {
-                                            await db.UpdateStatusDownload(item.VideoId, nameof(StatusDownload.DOWNLOADING));
+                                            await db.UpdateStatusDownload(item.VideoId, "Đang download");
                                         }
 
                                         await clsCommon.DownloadYouTubeVideo(item.Url, txtFolderPath.Text);
 
                                         using (var db = new YoutubeDbContext())
                                         {
-                                            await db.UpdateStatusDownload(item.VideoId, nameof(StatusDownload.DONE));
+                                            await db.UpdateStatusDownload(item.VideoId, "Đã download");
                                         }
 
                                         bworkerDownload.ReportProgress(0);
