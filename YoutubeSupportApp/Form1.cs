@@ -31,14 +31,7 @@ namespace YoutubeSupportApp
             await SetCbx();
             await Search();
             // guide
-            txtGuide.Text = @$"public static async Task<string> ProcessCard(CreditCard creditCard)
-{{
-    await Task.Delay(1000);
-    string message = $""Credit Card Number: {{creditCard.CardNumber}} Name: {{creditCard.Name}} Processed"";
-    Console.WriteLine($""Credit Card Number: {{creditCard.CardNumber}} Processed"");
-    return message;
-}}";
-
+            txtGuide.Text = clsGuide.Guide();
         }
         private void HeaderCheckBox_MouseClick(object sender, MouseEventArgs e)
         {
@@ -46,38 +39,49 @@ namespace YoutubeSupportApp
         }
         private async void btnShowVideo_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtChannelID.Text))
+            try
             {
-                MessageBox.Show("Nhập ChannelID");
-                return;
-            }
-            waitForm.Show(this);
-            var CHANNELID = txtChannelID.Text;
-            var CLIENT_SECRETS = System.Configuration.ConfigurationManager.AppSettings["CLIENT_SECRETS"];
-            var playlistModels = await clsCommon.GetPlaylistModels(CLIENT_SECRETS, CHANNELID);
-            foreach (var item in playlistModels)
-            {
-                var videos = await clsCommon.GetVideoModels(CLIENT_SECRETS, item.Id);
-                if (videos.Any())
+                if (string.IsNullOrEmpty(txtChannelID.Text))
                 {
-                    item.Videos = videos;
+                    MessageBox.Show("Nhập ChannelID");
+                    return;
                 }
-            }
-            var combineModels = playlistModels.ToCombine();
-            if (combineModels.Any())
-            {
-                var videos = combineModels.ToVideoEntity();
-                videos.ForEach(x =>
+                waitForm.Show(this);
+                var CHANNELID = txtChannelID.Text;
+                var CLIENT_SECRETS = System.Configuration.ConfigurationManager.AppSettings["CLIENT_SECRETS"];
+                var playlistModels = await clsCommon.GetPlaylistModels(CLIENT_SECRETS, CHANNELID);
+                foreach (var item in playlistModels)
                 {
-                    x.VideoId?.Trim();
-                    x.VideoTitle?.Trim();
-                });
-                videos = videos.Where(x=> "Private video".Equals(x.VideoTitle) == false).GroupBy(g => new { g.VideoId }).Select(g => g.First()).ToList();
-                await this.dbContext.AddVideos(videos, CHANNELID);
-                await SetCbx();
-                await Search();
+                    var videos = await clsCommon.GetVideoModels(CLIENT_SECRETS, item.Id);
+                    if (videos.Any())
+                    {
+                        item.Videos = videos;
+                    }
+                }
+                var combineModels = playlistModels.ToCombine();
+                if (combineModels.Any())
+                {
+                    var videos = combineModels.ToVideoEntity();
+                    videos.ForEach(x =>
+                    {
+                        x.VideoId?.Trim();
+                        x.VideoTitle?.Trim();
+                    });
+                    videos = videos.Where(x => "Private video".Equals(x.VideoTitle) == false).GroupBy(g => new { g.VideoId }).Select(g => g.First()).ToList();
+                    await this.dbContext.AddVideos(videos, CHANNELID);
+                    await SetCbx();
+                    await Search();
+                }
+                
             }
-            waitForm.Close();
+            catch (Exception ex)
+            {
+                MessageBox.Show("ChannelID không đúng hoặc API KEY hết hạn");              
+            }
+            finally
+            {
+                waitForm.Close();
+            }            
         }
         private async void btnDelete_Click(object sender, EventArgs e)
         {
