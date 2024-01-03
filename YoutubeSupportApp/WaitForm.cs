@@ -1,4 +1,6 @@
-﻿namespace YoutubeSupportApp
+﻿using Point = System.Drawing.Point;
+
+namespace YoutubeSupportApp
 {
     public partial class WaitForm : Form
     {

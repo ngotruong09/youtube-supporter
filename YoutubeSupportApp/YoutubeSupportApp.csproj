@@ -11,6 +11,7 @@
 	<ItemGroup>
 		<PackageReference Include="Google.Apis.Auth" Version="1.64.0" />
 		<PackageReference Include="Google.Apis.YouTube.v3" Version="1.64.0.3205" />
+		<PackageReference Include="IronPdf" Version="2023.12.6" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.25">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -34,6 +35,12 @@
 	    <Generator>ResXFileCodeGenerator</Generator>
 	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
 	  </EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Guide\Building_Microservice_Solutions.pdf">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

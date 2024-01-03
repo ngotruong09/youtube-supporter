@@ -1,4 +1,8 @@
-﻿namespace YoutubeSupportApp
+﻿using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
+using SizeF = System.Drawing.SizeF;
+
+namespace YoutubeSupportApp
 {
     partial class WaitForm
     {
