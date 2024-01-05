@@ -53,6 +53,7 @@ namespace YoutubeSupportApp
 			progressBar1 = new ProgressBar();
 			tabControl1 = new TabControl();
 			tabPage1 = new TabPage();
+			btnOpen = new Button();
 			cbxStatus = new ComboBox();
 			cbxPlaylist = new ComboBox();
 			btnContinue = new Button();
@@ -68,10 +69,10 @@ namespace YoutubeSupportApp
 			label2 = new Label();
 			label3 = new Label();
 			tabPage2 = new TabPage();
+			pnlWeb = new Panel();
 			txtGuide = new TextBox();
 			bworkerDownload = new System.ComponentModel.BackgroundWorker();
 			timer1 = new System.Windows.Forms.Timer(components);
-			pnlWeb = new Panel();
 			((System.ComponentModel.ISupportInitialize)dgvVideo).BeginInit();
 			groupBox1.SuspendLayout();
 			groupBox3.SuspendLayout();
@@ -274,6 +275,7 @@ namespace YoutubeSupportApp
 			// 
 			// tabPage1
 			// 
+			tabPage1.Controls.Add(btnOpen);
 			tabPage1.Controls.Add(cbxStatus);
 			tabPage1.Controls.Add(cbxPlaylist);
 			tabPage1.Controls.Add(btnContinue);
@@ -298,6 +300,16 @@ namespace YoutubeSupportApp
 			tabPage1.Text = "Video";
 			tabPage1.UseVisualStyleBackColor = true;
 			// 
+			// btnOpen
+			// 
+			btnOpen.Location = new Point(455, 31);
+			btnOpen.Name = "btnOpen";
+			btnOpen.Size = new Size(48, 23);
+			btnOpen.TabIndex = 9;
+			btnOpen.Text = "Open";
+			btnOpen.UseVisualStyleBackColor = true;
+			btnOpen.Click += btnOpen_Click;
+			// 
 			// cbxStatus
 			// 
 			cbxStatus.FormattingEnabled = true;
@@ -321,7 +333,7 @@ namespace YoutubeSupportApp
 			// 
 			// btnContinue
 			// 
-			btnContinue.Location = new Point(1084, 68);
+			btnContinue.Location = new Point(1084, 70);
 			btnContinue.Margin = new Padding(3, 2, 3, 2);
 			btnContinue.Name = "btnContinue";
 			btnContinue.Size = new Size(75, 26);
@@ -333,7 +345,7 @@ namespace YoutubeSupportApp
 			// 
 			// btnDownload
 			// 
-			btnDownload.Location = new Point(1082, 37);
+			btnDownload.Location = new Point(1082, 38);
 			btnDownload.Margin = new Padding(3, 2, 3, 2);
 			btnDownload.Name = "btnDownload";
 			btnDownload.Size = new Size(75, 26);
@@ -349,7 +361,7 @@ namespace YoutubeSupportApp
 			txtFolderPath.Margin = new Padding(3, 2, 3, 2);
 			txtFolderPath.Name = "txtFolderPath";
 			txtFolderPath.PlaceholderText = "Folder Path";
-			txtFolderPath.Size = new Size(494, 23);
+			txtFolderPath.Size = new Size(445, 23);
 			txtFolderPath.TabIndex = 7;
 			txtFolderPath.Tag = "5";
 			// 
@@ -387,7 +399,7 @@ namespace YoutubeSupportApp
 			// 
 			// btnClearAll
 			// 
-			btnClearAll.Location = new Point(1011, 68);
+			btnClearAll.Location = new Point(1011, 70);
 			btnClearAll.Margin = new Padding(3, 2, 3, 2);
 			btnClearAll.Name = "btnClearAll";
 			btnClearAll.Size = new Size(69, 26);
@@ -399,7 +411,7 @@ namespace YoutubeSupportApp
 			// 
 			// btnSearch
 			// 
-			btnSearch.Location = new Point(1011, 37);
+			btnSearch.Location = new Point(1011, 38);
 			btnSearch.Margin = new Padding(3, 2, 3, 2);
 			btnSearch.Name = "btnSearch";
 			btnSearch.Size = new Size(69, 26);
@@ -462,6 +474,14 @@ namespace YoutubeSupportApp
 			tabPage2.Text = "How to use";
 			tabPage2.UseVisualStyleBackColor = true;
 			// 
+			// pnlWeb
+			// 
+			pnlWeb.Dock = DockStyle.Fill;
+			pnlWeb.Location = new Point(3, 2);
+			pnlWeb.Name = "pnlWeb";
+			pnlWeb.Size = new Size(1162, 628);
+			pnlWeb.TabIndex = 1;
+			// 
 			// txtGuide
 			// 
 			txtGuide.Dock = DockStyle.Fill;
@@ -484,14 +504,6 @@ namespace YoutubeSupportApp
 			// 
 			timer1.Interval = 4000;
 			timer1.Tick += timer1_Tick;
-			// 
-			// pnlWeb
-			// 
-			pnlWeb.Dock = DockStyle.Fill;
-			pnlWeb.Location = new Point(3, 2);
-			pnlWeb.Name = "pnlWeb";
-			pnlWeb.Size = new Size(1162, 628);
-			pnlWeb.TabIndex = 1;
 			// 
 			// Form1
 			// 
@@ -558,5 +570,6 @@ namespace YoutubeSupportApp
         private TabPage tabPage2;
         private TextBox txtGuide;
 		private Panel pnlWeb;
+		private Button btnOpen;
 	}
 }

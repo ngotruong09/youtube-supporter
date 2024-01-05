@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using YoutubeSupportApp.Database;
 using YoutubeSupportApp.Helpers;
 using YoutubeSupportApp.Models;
@@ -372,16 +373,32 @@ namespace YoutubeSupportApp
 
 		private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			var a = Directory.GetCurrentDirectory();
-			var b = System.IO.Path.GetDirectoryName(Application.ExecutablePath);
 			TabPage current = (sender as TabControl).SelectedTab;
-			if(current.Name == "tabPage2")
+			if (current.Name == "tabPage2")
 			{
 				wb = new WebBrowser();
 				wb.Width = pnlWeb.Width;
 				wb.Height = pnlWeb.Height;
-				wb.Navigate(@"E:\SAVE\Building_Microservice_Solutions.pdf");
+				wb.DocumentText = clsGuide.Guide();
 				pnlWeb.Controls.Add(wb);
+			}
+		}
+
+		private void btnOpen_Click(object sender, EventArgs e)
+		{
+			var path = txtFolderPath.Text;
+			if(Directory.Exists(path))
+			{
+				ProcessStartInfo startInfo = new ProcessStartInfo()
+				{
+					Arguments = path,
+					FileName = "explorer.exe"
+				};
+				Process.Start(startInfo);
+			}
+			else
+			{
+				MessageBox.Show(string.Format("{0} Directory does not exist!", path));
 			}
 		}
 	}
